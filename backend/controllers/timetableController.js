@@ -18,7 +18,7 @@ const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 export const generateNaiveTimetable = async (req, res) => {
   try {
     const courses = await Course.find();
-    const faculty = await Faculty.find();
+    const faculty = await Faculty.find().populate('user_id', 'name email');
     const rooms = await Room.find();
 
     if (!courses.length || !faculty.length || !rooms.length)
@@ -30,17 +30,24 @@ export const generateNaiveTimetable = async (req, res) => {
 
     for (let i = 0; i < courses.length; i++) {
       const course = courses[i];
-      const facultyAssigned = faculty[i % faculty.length];
+      
+      // Find faculty with expertise in this course, or assign randomly
+      let facultyAssigned = faculty.find(f => f.expertise?.includes(course.code));
+      if (!facultyAssigned) {
+        facultyAssigned = faculty[i % faculty.length];
+      }
+      
       const roomAssigned = rooms[i % rooms.length];
 
       timetable.push({
-  course: course.title,
-  faculty: facultyAssigned.name || facultyAssigned.department || "N/A",
-  room: roomAssigned.name,
-  day: days[dayIndex],
-  time: timeSlots[slotIndex],
-});
-
+        course_name: course.title,
+        course_code: course.code,
+        faculty_id: facultyAssigned._id,
+        room_id: roomAssigned.name,
+        batch_id: "Batch-" + (i % 3 + 1),
+        day: days[dayIndex],
+        time_slot: timeSlots[slotIndex],
+      });
 
       slotIndex++;
       if (slotIndex >= timeSlots.length) {
@@ -55,7 +62,7 @@ export const generateNaiveTimetable = async (req, res) => {
     });
 
     res.json({
-      message: "Naive timetable generated successfully",
+      message: `Timetable generated with ${timetable.length} classes using ${faculty.length} faculty members`,
       totalSessions: timetable.length,
       timetable: saved.data,
     });
@@ -69,5 +76,23 @@ export const getLatestTimetable = async (req, res) => {
   const latest = await Timetable.findOne().sort({ created_at: -1 });
   if (!latest) return res.status(404).json({ message: "No timetable found" });
   res.json({ data: latest.data }); // ✅ wrap inside object
+};
+
+export const updateTimetable = async (req, res) => {
+  try {
+    const { data } = req.body;
+    const latest = await Timetable.findOne().sort({ created_at: -1 });
+    
+    if (!latest) {
+      return res.status(404).json({ message: "No timetable found" });
+    }
+    
+    latest.data = data;
+    await latest.save();
+    
+    res.json({ message: "Timetable updated successfully", data: latest.data });
+  } catch (err) {
+    res.status(500).json({ message: "Update failed", error: err.message });
+  }
 };
 

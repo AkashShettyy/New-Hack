@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
+import FacultyAlertComponent from "../components/FacultyAlertComponent";
+import FacultyManagement from "../components/FacultyManagement";
+import AdminTimetable from "../components/AdminTimetable";
+import AdminNotifications from "../components/AdminNotifications";
 
 export default function AdminPage() {
   const [file, setFile] = useState(null);
@@ -34,10 +38,13 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="p-6 bg-white rounded shadow-md">
-      <h2 className="text-2xl font-semibold mb-4 text-blue-700">
-        Admin CSV Upload
-      </h2>
+    <div className="space-y-6">
+      <AdminNotifications />
+      
+      <div className="p-6 bg-white rounded shadow-md">
+        <h2 className="text-2xl font-semibold mb-4 text-blue-700">
+          Admin CSV Upload
+        </h2>
 
       <div className="flex flex-col gap-4">
         <select
@@ -72,6 +79,13 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+      </div>
+      
+      <FacultyAlertComponent />
+      
+      <FacultyManagement />
+      
+      <AdminTimetable />
     </div>
   );
 }

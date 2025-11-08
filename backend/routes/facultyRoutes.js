@@ -5,6 +5,7 @@ import {
   getFaculty,
   updateFaculty,
   deleteFaculty,
+  getMyFacultyProfile,
 } from "../controllers/facultyController.js";
 
 const router = express.Router();
@@ -12,6 +13,8 @@ const router = express.Router();
 router.route("/")
   .get(protect, getFaculty)
   .post(protect, adminOnly, createFaculty);
+
+router.get("/me", protect, getMyFacultyProfile);
 
 router.route("/:id")
   .put(protect, adminOnly, updateFaculty)
